@@ -1093,7 +1093,16 @@ async def aggregate_vcontest(channel_id, message_id, cid, start_dt, duration_sec
         msg_lines.append(f"**{i+1}({data['rank']})位**: {data['user']}@{data['display']}  {data['score']}pts - {time_str}({data['penalties']}) perf : **{perf}**{rating_str}")
         msg_lines.append(f"  [{task_line}]")
 
-    await channel.send("\n".join(msg_lines))
+    # Discord 2000文字制限対策（1900文字分割）
+    current_chunk = ""
+    for line in msg_lines:
+        if len(current_chunk) + len(line) + 1 > 1900:
+            await channel.send(current_chunk)
+            current_chunk = line + "\n"
+        else:
+            current_chunk += line + "\n"
+    if current_chunk.strip():
+        await channel.send(current_chunk)
     
     if str(message_id) in vcons_data:
         del vcons_data[str(message_id)]
